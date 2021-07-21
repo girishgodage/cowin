@@ -1,0 +1,129 @@
+﻿@page "/"
+<MudText Typo="Typo.h5" Color="Color.Primary">Stay Home. Stay Safe.</MudText>
+<MudText Typo="Typo.caption" Color="Color.Primary">Fight Against COVID-19.</MudText>
+<MudItem xs="12" sm="12" md="12" Style="margin:10px 0px 20px 0px">
+    <MudAlert Variant="Variant.Text " Severity="Severity.Info">Once you find a prefferable slot for vaccines, head over to the <MudLink Href="https://www.cowin.gov.in/" Target="_blank">cowin portal</MudLink> to book the slots. Note that the application uses data from the Official Indian cowin Public API.</MudAlert>
+</MudItem>
+<MudGrid>
+    <MudTabs Outlined="false" Centered="true" Style="width:inherit;margin:10px" Elevation=25 ApplyEffectsToContainer="true" PanelClass="pa-6" TabPanelClass="customcc">
+        <MudTabPanel Text="Search By District" OnClick="ResetAsync" Icon="@Icons.Material.Filled.PushPin">
+            <MudItem xs="12" md="12">
+                <MudCard Elevation="25">
+                    <MudCardContent Class="pa-46" Style="padding:26px!important">
+                        <MudGrid>
+                            <MudItem xs="12" md="3">
+                                <MudAutocomplete T="State" Variant="Variant.Outlined" Label="States" @bind-Value="SelectedState" SearchFunc="@SearchStates" ToStringFunc="@(e=> e==null?null : $"{e.state_name}")" MaxItems="50" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudAutocomplete T="District" Variant="Variant.Outlined" Label="Districts" @bind-Value="SelectedDistrict" SearchFunc="@SearchDistricts" ToStringFunc="@(e=> e==null?null : $"{e.district_name}")" MaxItems="50" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudDatePicker DateFormat="dd/MM/yyyy" InputVariant="Variant.Outlined" Label="Date" @bind-Date="date" />
+                            </MudItem>
+                            <MudItem Style="align-self:center" xs="12" md="3">
+                                <div class="justify-center mud-text-align-center">
+                                    <MudButton Variant="Variant.Filled" Size="Size.Large" OnClick="SearchForAvailableVaccinesAsync" Color="Color.Secondary">Search</MudButton>
+                                    <MudButton Variant="Variant.Filled" Size="Size.Large" OnClick="ResetAsync" Color="Color.Info">Reset</MudButton>
+                                </div>
+                            </MudItem>
+                        </MudGrid>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudTabPanel>
+        <MudTabPanel Text="Search By PIN" OnClick="ResetAsync" Icon="@Icons.Material.Filled.FiberPin">
+            <MudItem xs="12" md="12">
+                <MudCard Elevation="25">
+                    <MudCardContent Class="pa-46" Style="padding:26px!important">
+                        <MudGrid>
+                            <MudItem xs="12" md="6">
+                                <MudTextField FullWidth="true" @bind-Value="ZipCode" Label="Enter ZIP" Variant="Variant.Outlined"></MudTextField>
+                            </MudItem>
+                            <MudItem Style="align-self:center" xs="12" md="6">
+                                <div class="justify-center mud-text-align-center">
+                                    <MudButton Variant="Variant.Filled" Size="Size.Large" OnClick="SearchForAvailableVaccinesZipAsync" Color="Color.Secondary">Search</MudButton>
+                                    <MudButton Variant="Variant.Filled" Size="Size.Large" OnClick="ResetAsync" Color="Color.Info">Reset</MudButton>
+                                </div>
+                            </MudItem>
+                        </MudGrid>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudTabPanel>
+    </MudTabs>
+    <br />
+    <br />
+    <br />
+    <MudItem xs="12" sm="6" md="4">
+        <MudPaper Elevation="25" Class="d-flex flex-row pt-6 pb-4" Style="height:100px;">
+            <MudIcon Icon="@Icons.Material.Filled.LocalHospital" Color="Color.Primary" Class="mx-4" Style="width:54px; height:54px;"></MudIcon>
+            <div>
+                <MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">Total Vaccinated</MudText>
+                <MudText Typo="Typo.h5">@PublicReportData.vaccination.total.ToString("N0")</MudText>
+            </div>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="4">
+        <MudPaper Elevation="25" Class="d-flex flex-row pt-6 pb-4" Style="height:100px;">
+            <MudIcon Icon="@Icons.Material.Filled.LooksOne" Color="Color.Secondary" Class="mx-4" Style="width:54px; height:54px;"></MudIcon>
+            <div>
+                <MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">DOSE-1</MudText>
+                <MudText Typo="Typo.h5">@PublicReportData.vaccination.tot_dose_1.ToString("N0")</MudText>
+            </div>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="4">
+        <MudPaper Elevation="25" Class="d-flex flex-row pt-6 pb-4" Style="height:100px;">
+            <MudIcon Icon="@Icons.Material.Filled.LooksTwo" Color="Color.Success" Class="mx-4" Style="width:54px; height:54px;"></MudIcon>
+            <div>
+                <MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">DOSE-2</MudText>
+                <MudText Typo="Typo.h5">@PublicReportData.vaccination.tot_dose_2.ToString("N0")</MudText>
+            </div>
+        </MudPaper>
+    </MudItem>
+    @if (!vaccinationSlotAvailable & searchingCompleted)
+    {
+        <MudItem xs="12" sm="12" md="12">
+            <MudAlert Variant="Variant.Filled" Severity="Severity.Error">Found @centersFound Vaccination Centers in your District. But Unfortunately all of them are booked. Try again later. </MudAlert>
+        </MudItem>
+    }
+    @if (vaccinationSlotAvailable & searchingCompleted)
+    {
+        <MudItem xs="12" sm="12" md="12">
+            <MudAlert Variant="Variant.Filled" Severity="Severity.Success">Found @centersFound Vaccination Centers in your District. Head over to the <MudLink Href="https://www.cowin.gov.in/" Target="_blank">cowin portal</MudLink> to book the slots right away. </MudAlert>
+        </MudItem>
+    }
+    @foreach (var center in Centers)
+    {
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="25">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">@center.name</MudText>
+                        <MudText Typo="Typo.caption"><MudIcon Icon="@Icons.Filled.LocationOn" ViewBox="0 -3 24 24" Size="Size.Small"></MudIcon>@center.address, @center.block_name, @center.district_name, @center.state_name - @center.pincode</MudText>
+
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent Style="padding-top:0px!important">
+                    <MudGrid>
+                        <MudItem xs="12" md="12">
+                            @foreach (var session in center.sessions.Where(s => s.available_capacity > 0))
+                            {
+                                <MudItem xs="12" sm="12" md="12">
+                                    <MudAlert Variant="Variant.Text" Severity="Severity.Info"> @session.available_capacity @session.vaccine Vaccine(s) Available on @session.date for Age Group @GetAgeGroup(session.min_age_limit).</MudAlert>
+                                </MudItem>
+                            }
+                        </MudItem>
+                        <div style="margin:10px">
+                            <MudChip Label="true" Color="GetFeeChipColor(center.fee_type)"> <MudIcon Icon="@Icons.Filled.AttachMoney" Style="margin-right:10px" Size="Size.Small"></MudIcon> @center.fee_type</MudChip>
+                            <MudChip Label="true" Color="Color.Surface" IconColor="Color.Secondary"><MudIcon Icon="@Icons.Filled.Timer" Style="margin-right:10px" Size="Size.Small"></MudIcon> @center.from - @center.to</MudChip>
+                            <MudChip Label="true" Color="Color.Surface"> <MudIcon Icon="@Icons.Filled.LocalHospital" Style="margin-right:10px" Size="Size.Small"></MudIcon> @center.sessions.Sum(a => a.available_capacity) Vaccines Available</MudChip>
+                        </div>
+                    </MudGrid>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    }
+</MudGrid>
+
+
